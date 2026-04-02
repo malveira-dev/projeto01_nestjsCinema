@@ -1,0 +1,129 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ClassificacaoEtaria {
+  L
+  A10
+  A12
+  A14
+  A16
+  A18
+}
+
+model Usuario {
+  id    Int    @id @default(autoincrement())
+  nome  String
+  email String @unique
+  senha String
+  role  Role   @default(USER)
+
+  pedidos Pedido[]
+
+  @@map("usuarios")
+}
+
+model Genero {
+  id     Int     @id @default(autoincrement())
+  nome   String  @unique
+  filmes Filme[]
+
+  @@map("generos")
+}
+
+model Filme {
+  id                  Int                 @id @default(autoincrement())
+  titulo              String
+  generoId            Int
+  duracao             Int
+  classificacaoEtaria ClassificacaoEtaria
+
+  genero  Genero   @relation(fields: [generoId], references: [id])
+  sessoes Sessao[]
+
+  @@map("filmes")
+}
+
+model Sala {
+  id         Int    @id @default(autoincrement())
+  numero     String @unique
+  capacidade Int
+
+  sessoes Sessao[]
+
+  @@map("salas")
+}
+
+model Sessao {
+  id            Int      @id @default(autoincrement())
+  filmeId       Int
+  salaId        Int
+  horarioInicio DateTime
+  valorIngresso Float
+
+  filme     Filme      @relation(fields: [filmeId], references: [id])
+  sala      Sala       @relation(fields: [salaId], references: [id])
+  ingressos Ingresso[]
+
+  @@map("sessoes")
+}
+
+model Ingresso {
+  id        Int    @id @default(autoincrement())
+  sessaoId  Int
+  tipo      String
+  valorPago Float
+  pedidoId  Int?
+
+  sessao Sessao  @relation(fields: [sessaoId], references: [id])
+  pedido Pedido? @relation(fields: [pedidoId], references: [id])
+
+  @@map("ingressos")
+}
+
+model LancheCombo {
+  id        Int     @id @default(autoincrement())
+  nome      String
+  descricao String?
+  preco     Float
+  itens     String
+
+  pedidos PedidoLancheCombo[]
+
+  @@map("lanches_combos")
+}
+
+model Pedido {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int
+  valorTotal Float
+  dataHora   DateTime @default(now())
+
+  usuario   Usuario             @relation(fields: [usuarioId], references: [id])
+  ingressos Ingresso[]
+  lanches   PedidoLancheCombo[]
+
+  @@map("pedidos")
+}
+
+model PedidoLancheCombo {
+  id            Int @id @default(autoincrement())
+  pedidoId      Int
+  lancheComboId Int
+  quantidade    Int @default(1)
+
+  pedido      Pedido      @relation(fields: [pedidoId], references: [id])
+  lancheCombo LancheCombo @relation(fields: [lancheComboId], references: [id])
+
+  @@map("pedido_lanches_combos")
+}

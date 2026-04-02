@@ -1,0 +1,1 @@
+require('dotenv/config'); const { PrismaClient } = require('@prisma/client'); try { const p = new PrismaClient({ log: ['info', 'warn', 'error'] }); p.usuario.findMany().then(r => { console.log('OK', r.length); p.(); }).catch(e => { console.log('PRISMA_ERR:', e.message); p.(); }); } catch(e) { console.log('INIT_ERR:', e.message); }
