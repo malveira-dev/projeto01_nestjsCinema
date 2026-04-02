@@ -34,9 +34,9 @@ const Layout = () => {
       <aside className="w-full md:w-64 bg-zinc-900 border-b md:border-b-0 md:border-r border-zinc-800 flex flex-col">
         <div className="p-6 flex items-center gap-3 text-indigo-400 font-bold text-2xl border-b border-zinc-800">
           <Film size={28} />
-          <span>CineManager</span>
+          <span>CineWeb</span>
         </div>
-        
+
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           {links.map((link) => {
             const isActive = location.pathname === link.path || (link.path !== '/admin' && link.path !== '/app' && location.pathname.startsWith(link.path));
@@ -44,11 +44,10 @@ const Layout = () => {
               <Link
                 key={link.name}
                 to={link.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive 
-                    ? 'bg-indigo-600 text-white font-medium shadow-md shadow-indigo-900/20' 
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive
+                    ? 'bg-indigo-600 text-white font-medium shadow-md shadow-indigo-900/20'
                     : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800'
-                }`}
+                  }`}
               >
                 {link.icon}
                 {link.name}

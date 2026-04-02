@@ -16,7 +16,7 @@ const LanchesPage = () => {
 
   const fetchLanches = async () => {
     try {
-      const { data } = await api.get('/lanche-combo');
+      const { data } = await api.get('/lanches-combos');
       setLanches(data);
     } catch (err) {
       toast.error('Erro ao buscar lanches');
@@ -32,10 +32,10 @@ const LanchesPage = () => {
     try {
       const payload = { nome, descricao, preco: Number(preco), itens };
       if (editingId) {
-        await api.patch(`/lanche-combo/${editingId}`, payload);
+        await api.patch(`/lanches-combos/${editingId}`, payload);
         toast.success('Combo atualizado!');
       } else {
-        await api.post('/lanche-combo', payload);
+        await api.post('/lanches-combos', payload);
         toast.success('Combo criado!');
       }
       resetForm();
@@ -64,7 +64,7 @@ const LanchesPage = () => {
   const handleDelete = async (id: number) => {
     if (!window.confirm('Excluir este combo?')) return;
     try {
-      await api.delete(`/lanche-combo/${id}`);
+      await api.delete(`/lanches-combos/${id}`);
       toast.success('Excluído');
       fetchLanches();
     } catch (err) {

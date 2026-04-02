@@ -26,9 +26,9 @@ const Register = () => {
   return (
     <div className="flex h-screen items-center justify-center bg-zinc-900 text-zinc-100 font-sans">
       <div className="w-full max-w-md p-8 bg-zinc-800 rounded-xl shadow-2xl border border-zinc-700">
-        <h1 className="text-3xl font-bold text-center text-indigo-400 mb-6">CineManager</h1>
+        <h1 className="text-3xl font-bold text-center text-indigo-400 mb-6">CineWeb</h1>
         <h2 className="text-xl font-medium text-center text-zinc-300 mb-8">Crie sua conta de usuário</h2>
-        
+
         <form onSubmit={handleRegister} className="space-y-5">
           <div>
             <label className="block text-sm font-medium text-zinc-400 mb-1">Nome Completo</label>
@@ -64,7 +64,7 @@ const Register = () => {
               placeholder="Mínimo 6 caracteres"
             />
           </div>
-          
+
           <button
             type="submit"
             className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-md transition-all duration-200 transform hover:scale-[1.02]"
@@ -72,7 +72,7 @@ const Register = () => {
             Cadastrar
           </button>
         </form>
-        
+
         <p className="mt-8 text-center text-zinc-400 text-sm">
           Já possui conta?{' '}
           <Link to="/login" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">

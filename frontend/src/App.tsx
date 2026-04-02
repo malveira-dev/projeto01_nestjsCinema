@@ -27,7 +27,7 @@ const AdminDashboard = () => (
 
 const ProtectedRoute = ({ children, requiredRole }: { children: React.ReactNode; requiredRole?: 'ADMIN' | 'USER' }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
-  if (isLoading) return <div className="flex h-screen items-center justify-center bg-zinc-950 text-indigo-500 text-xl font-medium">Carregando CineManager...</div>;
+  if (isLoading) return <div className="flex h-screen items-center justify-center bg-zinc-950 text-indigo-500 text-xl font-medium">Carregando CineWeb...</div>;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (requiredRole && user?.role !== requiredRole) return <Navigate to={user?.role === 'ADMIN' ? '/admin' : '/app'} replace />;
   return <>{children}</>;

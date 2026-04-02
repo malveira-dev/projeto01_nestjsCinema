@@ -9,7 +9,7 @@ const PDVPage = () => {
   const [sessoes, setSessoes] = useState<Sessao[]>([]);
   const [lanches, setLanches] = useState<LancheCombo[]>([]);
   const navigate = useNavigate();
-  
+
   const [selectedSessaoId, setSelectedSessaoId] = useState<number | null>(null);
   const [ingressosInt, setIngressosInt] = useState(1);
   const [ingressosMeia, setIngressosMeia] = useState(0);
@@ -18,8 +18,8 @@ const PDVPage = () => {
   const fetchCatalog = async () => {
     try {
       const [sRes, lRes] = await Promise.all([
-        api.get('/sessao'),
-        api.get('/lanche-combo')
+        api.get('/sessoes'),
+        api.get('/lanches-combos')
       ]);
       setSessoes(sRes.data);
       setLanches(lRes.data);
@@ -46,7 +46,7 @@ const PDVPage = () => {
     const preco = Number(selectedSessao.valorIngresso);
     return (ingressosInt * preco) + (ingressosMeia * preco / 2);
   };
-  
+
   const getSubtotalLanches = () => {
     return lanchesCart.reduce((acc, item) => {
       const dbLanche = lanches.find(l => l.id === item.id);
@@ -60,10 +60,10 @@ const PDVPage = () => {
 
     const ingressosData = [];
     for (let i = 0; i < ingressosInt; i++) {
-        ingressosData.push({ sessaoId: selectedSessao.id, tipo: 'Inteira' });
+      ingressosData.push({ sessaoId: selectedSessao.id, tipo: 'Inteira' });
     }
     for (let i = 0; i < ingressosMeia; i++) {
-        ingressosData.push({ sessaoId: selectedSessao.id, tipo: 'Meia' });
+      ingressosData.push({ sessaoId: selectedSessao.id, tipo: 'Meia' });
     }
 
     try {
@@ -97,15 +97,15 @@ const PDVPage = () => {
               const ingressosVendidos = s._count?.ingressos || 0;
               const capacidade = s.sala?.capacidade || 0;
               const esgotado = ingressosVendidos >= capacidade;
-              
+
               return (
-                <div 
-                  key={s.id} 
+                <div
+                  key={s.id}
                   onClick={() => !esgotado && setSelectedSessaoId(s.id)}
                   className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer overflow-hidden
-                    ${selectedSessaoId === s.id ? 'border-indigo-500 bg-indigo-950/20 translate-y-[-2px] shadow-lg shadow-indigo-500/10' : 
-                    esgotado ? 'border-zinc-800 bg-zinc-900/50 opacity-60 cursor-not-allowed' :
-                    'border-zinc-800 bg-zinc-950 hover:border-indigo-500/50 hover:bg-zinc-900'}
+                    ${selectedSessaoId === s.id ? 'border-indigo-500 bg-indigo-950/20 translate-y-[-2px] shadow-lg shadow-indigo-500/10' :
+                      esgotado ? 'border-zinc-800 bg-zinc-900/50 opacity-60 cursor-not-allowed' :
+                        'border-zinc-800 bg-zinc-950 hover:border-indigo-500/50 hover:bg-zinc-900'}
                   `}
                 >
                   {esgotado && <div className="absolute top-4 right-4 text-xs font-bold bg-red-600 text-white px-2 py-1 rounded">ESGOTADO</div>}
@@ -113,10 +113,10 @@ const PDVPage = () => {
                   <div className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-800 text-zinc-300 mb-3 border border-zinc-700">
                     {s.filme?.genero?.nome} • {s.filme?.duracao}m • {s.filme?.classificacaoEtaria}
                   </div>
-                  
+
                   <div className="space-y-2 text-sm text-zinc-400">
-                    <div className="flex gap-2 items-center"><Calendar size={15}/> {dt.toLocaleDateString('pt-BR')}</div>
-                    <div className="flex gap-2 items-center"><Clock size={15}/> {dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' })}</div>
+                    <div className="flex gap-2 items-center"><Calendar size={15} /> {dt.toLocaleDateString('pt-BR')}</div>
+                    <div className="flex gap-2 items-center"><Clock size={15} /> {dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</div>
                     <div className="flex justify-between items-center pt-2 mt-2 border-t border-zinc-800/50">
                       <span className="font-semibold text-green-400">R$ {Number(s.valorIngresso).toFixed(2).replace('.', ',')}</span>
                       <span className="text-xs">{capacidade - ingressosVendidos} lugares livres</span>
@@ -138,7 +138,7 @@ const PDVPage = () => {
                     <h4 className="font-medium text-zinc-200 text-sm mb-1">{l.nome}</h4>
                     <p className="text-xs text-zinc-500 mb-2 h-8 line-clamp-2">{l.itens}</p>
                     <p className="font-semibold text-indigo-400 mb-3">R$ {Number(l.preco).toFixed(2).replace('.', ',')}</p>
-                    
+
                     <div className="flex items-center justify-between border border-zinc-700 rounded-lg p-1 bg-zinc-950">
                       <button type="button" onClick={() => handleLancheChange(l.id, Math.max(0, qty - 1))} className="w-8 h-8 flex items-center justify-center text-zinc-400 hover:text-white bg-zinc-800 rounded hover:bg-zinc-700">-</button>
                       <span className="text-zinc-200 font-medium text-sm">{qty}</span>
@@ -165,22 +165,22 @@ const PDVPage = () => {
             <div className="space-y-6">
               <div className="p-4 bg-zinc-950 border border-indigo-500/20 rounded-xl">
                 <p className="font-bold text-indigo-300">{selectedSessao.filme?.titulo}</p>
-                <p className="text-sm text-zinc-400">{new Date(selectedSessao.horarioInicio).toLocaleString('pt-BR', { dateStyle:'short', timeStyle: 'short'})} • Sala {selectedSessao.sala?.numero}</p>
+                <p className="text-sm text-zinc-400">{new Date(selectedSessao.horarioInicio).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })} • Sala {selectedSessao.sala?.numero}</p>
                 <div className="mt-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-zinc-300">Ingresso Inteira</span>
                     <div className="flex items-center gap-3">
-                      <button onClick={()=>setIngressosInt(Math.max(0, ingressosInt-1))} className="px-2 py-0.5 bg-zinc-800 rounded text-sm">-</button>
+                      <button onClick={() => setIngressosInt(Math.max(0, ingressosInt - 1))} className="px-2 py-0.5 bg-zinc-800 rounded text-sm">-</button>
                       <span className="w-4 text-center">{ingressosInt}</span>
-                      <button onClick={()=>setIngressosInt(ingressosInt+1)} className="px-2 py-0.5 bg-zinc-800 rounded text-sm">+</button>
+                      <button onClick={() => setIngressosInt(ingressosInt + 1)} className="px-2 py-0.5 bg-zinc-800 rounded text-sm">+</button>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-zinc-300">Meia-entrada</span>
                     <div className="flex items-center gap-3">
-                      <button onClick={()=>setIngressosMeia(Math.max(0, ingressosMeia-1))} className="px-2 py-0.5 bg-zinc-800 rounded text-sm">-</button>
+                      <button onClick={() => setIngressosMeia(Math.max(0, ingressosMeia - 1))} className="px-2 py-0.5 bg-zinc-800 rounded text-sm">-</button>
                       <span className="w-4 text-center">{ingressosMeia}</span>
-                      <button onClick={()=>setIngressosMeia(ingressosMeia+1)} className="px-2 py-0.5 bg-zinc-800 rounded text-sm">+</button>
+                      <button onClick={() => setIngressosMeia(ingressosMeia + 1)} className="px-2 py-0.5 bg-zinc-800 rounded text-sm">+</button>
                     </div>
                   </div>
                 </div>
@@ -191,7 +191,7 @@ const PDVPage = () => {
                   <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-2">Lanches</h3>
                   <ul className="space-y-1 text-sm text-zinc-300 border-l-2 border-zinc-800 pl-3">
                     {lanchesCart.map(item => {
-                      const lInfo = lanches.find(l=>l.id===item.id);
+                      const lInfo = lanches.find(l => l.id === item.id);
                       return <li key={item.id} className="flex justify-between"><span>{item.qty}x {lInfo?.nome}</span></li>
                     })}
                   </ul>
@@ -218,7 +218,7 @@ const PDVPage = () => {
                 disabled={ingressosInt + ingressosMeia === 0}
                 className="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-900/20 transition-all"
               >
-                <CreditCard size={18} /> Rezar Pagamento (Simulado)
+                <CreditCard size={18} /> Realizar Pagamento
               </button>
             </div>
           )}

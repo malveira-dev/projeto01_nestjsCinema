@@ -20,7 +20,7 @@ const SessoesPage = () => {
   const fetchData = async () => {
     try {
       const [sRes, fRes, salRes] = await Promise.all([
-        api.get('/sessao'),
+        api.get('/sessoes'),
         api.get('/filmes'),
         api.get('/salas')
       ]);
@@ -55,10 +55,10 @@ const SessoesPage = () => {
 
     try {
       if (editingId) {
-        await api.patch(`/sessao/${editingId}`, payload);
+        await api.patch(`/sessoes/${editingId}`, payload);
         toast.success('Sessão atualizada!');
       } else {
-        await api.post('/sessao', payload);
+        await api.post('/sessoes', payload);
         toast.success('Sessão registrada com sucesso!');
       }
       resetForm();
@@ -100,7 +100,7 @@ const SessoesPage = () => {
   const handleDelete = async (id: number) => {
     if (!window.confirm('Excluir esta sessão? Ação destrutiva caso haja ingressos.')) return;
     try {
-      await api.delete(`/sessao/${id}`);
+      await api.delete(`/sessoes/${id}`);
       toast.success('Excluída');
       fetchData();
     } catch (err) {
