@@ -18,34 +18,54 @@ let PedidoService = class PedidoService {
         this.prisma = prisma;
     }
     async create(dto, usuarioId) {
-        const { ingressoIds = [], lancheItems = [] } = dto;
-        if (ingressoIds.length === 0 && lancheItems.length === 0) {
+        const { ingressos, lanches = [] } = dto;
+        if (ingressos.length === 0 && lanches.length === 0) {
             throw new common_1.BadRequestException('O pedido deve conter pelo menos um ingresso ou lanche/combo');
         }
         let valorTotal = 0;
-        if (ingressoIds.length > 0) {
-            const ingressos = await this.prisma.ingresso.findMany({
-                where: { id: { in: ingressoIds } },
-            });
-            if (ingressos.length !== ingressoIds.length) {
-                throw new common_1.NotFoundException('Um ou mais ingressos não foram encontrados');
-            }
-            const ingressosComPedido = ingressos.filter((i) => i.pedidoId !== null);
-            if (ingressosComPedido.length > 0) {
-                throw new common_1.BadRequestException(`Os ingressos ${ingressosComPedido.map((i) => i.id).join(', ')} já estão associados a outro pedido`);
-            }
-            valorTotal += ingressos.reduce((sum, i) => sum + i.valorPago, 0);
+        const sessaoMap = new Map();
+        for (const ing of ingressos) {
+            sessaoMap.set(ing.sessaoId, (sessaoMap.get(ing.sessaoId) || 0) + 1);
         }
-        if (lancheItems.length > 0) {
-            const lancheIds = lancheItems.map((l) => l.lancheComboId);
-            const lanches = await this.prisma.lancheCombo.findMany({
+        const sessaoIds = [...sessaoMap.keys()];
+        const sessoes = await this.prisma.sessao.findMany({
+            where: { id: { in: sessaoIds } },
+            include: {
+                sala: true,
+                _count: { select: { ingressos: true } },
+            },
+        });
+        if (sessoes.length !== sessaoIds.length) {
+            throw new common_1.NotFoundException('Uma ou mais sessões não foram encontradas');
+        }
+        for (const sessao of sessoes) {
+            const qtdSolicitada = sessaoMap.get(sessao.id) || 0;
+            const lugaresDisponiveis = sessao.sala.capacidade - sessao._count.ingressos;
+            if (qtdSolicitada > lugaresDisponiveis) {
+                throw new common_1.BadRequestException(`Sala ${sessao.sala.numero} possui apenas ${lugaresDisponiveis} lugar(es) disponível(is) para esta sessão`);
+            }
+        }
+        const ingressosData = ingressos.map((ing) => {
+            const sessao = sessoes.find((s) => s.id === ing.sessaoId);
+            const precoBase = sessao.valorIngresso;
+            const valorPago = ing.tipo === 'Meia' ? precoBase / 2 : precoBase;
+            valorTotal += valorPago;
+            return {
+                sessaoId: ing.sessaoId,
+                tipo: ing.tipo,
+                valorPago,
+            };
+        });
+        if (lanches.length > 0) {
+            const lancheIds = lanches.map((l) => l.lancheComboId);
+            const lanchesDb = await this.prisma.lancheCombo.findMany({
                 where: { id: { in: lancheIds } },
             });
-            if (lanches.length !== new Set(lancheIds).size) {
+            if (lanchesDb.length !== new Set(lancheIds).size) {
                 throw new common_1.NotFoundException('Um ou mais lanches/combos não foram encontrados');
             }
-            for (const item of lancheItems) {
-                const lanche = lanches.find((l) => l.id === item.lancheComboId);
+            for (const item of lanches) {
+                const lanche = lanchesDb.find((l) => l.id === item.lancheComboId);
                 if (lanche) {
                     valorTotal += lanche.preco * item.quantidade;
                 }
@@ -56,10 +76,10 @@ let PedidoService = class PedidoService {
                 usuarioId,
                 valorTotal,
                 ingressos: {
-                    connect: ingressoIds.map((id) => ({ id })),
+                    create: ingressosData,
                 },
                 lanches: {
-                    create: lancheItems.map((item) => ({
+                    create: lanches.map((item) => ({
                         lancheComboId: item.lancheComboId,
                         quantidade: item.quantidade,
                     })),

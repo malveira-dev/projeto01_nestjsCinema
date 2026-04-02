@@ -1,5 +1,13 @@
-import { IsArray, IsInt, IsOptional, ValidateNested, Min, ArrayMinSize } from 'class-validator';
+import { IsArray, IsInt, IsOptional, IsString, ValidateNested, Min, ArrayMinSize } from 'class-validator';
 import { Type } from 'class-transformer';
+
+export class IngressoItemDto {
+  @IsInt()
+  sessaoId: number;
+
+  @IsString()
+  tipo: string;
+}
 
 export class LancheItemDto {
   @IsInt()
@@ -12,13 +20,14 @@ export class LancheItemDto {
 
 export class CreatePedidoDto {
   @IsArray()
-  @IsOptional()
-  @IsInt({ each: true })
-  ingressoIds?: number[];
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => IngressoItemDto)
+  ingressos: IngressoItemDto[];
 
   @IsArray()
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => LancheItemDto)
-  lancheItems?: LancheItemDto[];
+  lanches?: LancheItemDto[];
 }

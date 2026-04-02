@@ -9,9 +9,22 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreatePedidoDto = exports.LancheItemDto = void 0;
+exports.CreatePedidoDto = exports.LancheItemDto = exports.IngressoItemDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
+class IngressoItemDto {
+    sessaoId;
+    tipo;
+}
+exports.IngressoItemDto = IngressoItemDto;
+__decorate([
+    (0, class_validator_1.IsInt)(),
+    __metadata("design:type", Number)
+], IngressoItemDto.prototype, "sessaoId", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], IngressoItemDto.prototype, "tipo", void 0);
 class LancheItemDto {
     lancheComboId;
     quantidade;
@@ -27,21 +40,22 @@ __decorate([
     __metadata("design:type", Number)
 ], LancheItemDto.prototype, "quantidade", void 0);
 class CreatePedidoDto {
-    ingressoIds;
-    lancheItems;
+    ingressos;
+    lanches;
 }
 exports.CreatePedidoDto = CreatePedidoDto;
 __decorate([
     (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)({ each: true }),
+    (0, class_validator_1.ArrayMinSize)(1),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => IngressoItemDto),
     __metadata("design:type", Array)
-], CreatePedidoDto.prototype, "ingressoIds", void 0);
+], CreatePedidoDto.prototype, "ingressos", void 0);
 __decorate([
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.ValidateNested)({ each: true }),
     (0, class_transformer_1.Type)(() => LancheItemDto),
     __metadata("design:type", Array)
-], CreatePedidoDto.prototype, "lancheItems", void 0);
+], CreatePedidoDto.prototype, "lanches", void 0);
 //# sourceMappingURL=create-pedido.dto.js.map

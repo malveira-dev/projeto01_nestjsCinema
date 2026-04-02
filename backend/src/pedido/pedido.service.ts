@@ -7,69 +7,96 @@ export class PedidoService {
   constructor(private prisma: PrismaService) {}
 
   /**
+   * REGRA DE NEGÓCIO 2: Validação de Capacidade da Sala
+   * O sistema verifica se a sala ainda possui lugares disponíveis antes de vender ingressos.
+   *
    * REGRA DE NEGÓCIO 3: Cálculo Automático do Valor Total
    * O sistema calcula automaticamente o valorTotal do pedido somando
    * os preços de todos os itens (ingressos e lanches/combos) inclusos.
+   * Meia-entrada recebe 50% de desconto.
    */
   async create(dto: CreatePedidoDto, usuarioId: number) {
-    const { ingressoIds = [], lancheItems = [] } = dto;
+    const { ingressos, lanches = [] } = dto;
 
-    if (ingressoIds.length === 0 && lancheItems.length === 0) {
+    if (ingressos.length === 0 && lanches.length === 0) {
       throw new BadRequestException('O pedido deve conter pelo menos um ingresso ou lanche/combo');
     }
 
     let valorTotal = 0;
 
-    // Calcular valor dos ingressos
-    if (ingressoIds.length > 0) {
-      const ingressos = await this.prisma.ingresso.findMany({
-        where: { id: { in: ingressoIds } },
-      });
-
-      if (ingressos.length !== ingressoIds.length) {
-        throw new NotFoundException('Um ou mais ingressos não foram encontrados');
-      }
-
-      // Verificar se algum ingresso já está associado a outro pedido
-      const ingressosComPedido = ingressos.filter((i) => i.pedidoId !== null);
-      if (ingressosComPedido.length > 0) {
-        throw new BadRequestException(
-          `Os ingressos ${ingressosComPedido.map((i) => i.id).join(', ')} já estão associados a outro pedido`,
-        );
-      }
-
-      valorTotal += ingressos.reduce((sum, i) => sum + i.valorPago, 0);
+    // ─── Validar e calcular ingressos ───
+    // Agrupar ingressos por sessão para validação de capacidade
+    const sessaoMap = new Map<number, number>();
+    for (const ing of ingressos) {
+      sessaoMap.set(ing.sessaoId, (sessaoMap.get(ing.sessaoId) || 0) + 1);
     }
 
-    // Calcular valor dos lanches/combos
-    if (lancheItems.length > 0) {
-      const lancheIds = lancheItems.map((l) => l.lancheComboId);
-      const lanches = await this.prisma.lancheCombo.findMany({
+    const sessaoIds = [...sessaoMap.keys()];
+    const sessoes = await this.prisma.sessao.findMany({
+      where: { id: { in: sessaoIds } },
+      include: {
+        sala: true,
+        _count: { select: { ingressos: true } },
+      },
+    });
+
+    if (sessoes.length !== sessaoIds.length) {
+      throw new NotFoundException('Uma ou mais sessões não foram encontradas');
+    }
+
+    // Regra 2: Validar capacidade para cada sessão
+    for (const sessao of sessoes) {
+      const qtdSolicitada = sessaoMap.get(sessao.id) || 0;
+      const lugaresDisponiveis = sessao.sala.capacidade - sessao._count.ingressos;
+      if (qtdSolicitada > lugaresDisponiveis) {
+        throw new BadRequestException(
+          `Sala ${sessao.sala.numero} possui apenas ${lugaresDisponiveis} lugar(es) disponível(is) para esta sessão`,
+        );
+      }
+    }
+
+    // Calcular valor de cada ingresso
+    const ingressosData = ingressos.map((ing) => {
+      const sessao = sessoes.find((s) => s.id === ing.sessaoId)!;
+      const precoBase = sessao.valorIngresso;
+      const valorPago = ing.tipo === 'Meia' ? precoBase / 2 : precoBase;
+      valorTotal += valorPago;
+      return {
+        sessaoId: ing.sessaoId,
+        tipo: ing.tipo,
+        valorPago,
+      };
+    });
+
+    // ─── Calcular valor dos lanches/combos ───
+    if (lanches.length > 0) {
+      const lancheIds = lanches.map((l) => l.lancheComboId);
+      const lanchesDb = await this.prisma.lancheCombo.findMany({
         where: { id: { in: lancheIds } },
       });
 
-      if (lanches.length !== new Set(lancheIds).size) {
+      if (lanchesDb.length !== new Set(lancheIds).size) {
         throw new NotFoundException('Um ou mais lanches/combos não foram encontrados');
       }
 
-      for (const item of lancheItems) {
-        const lanche = lanches.find((l) => l.id === item.lancheComboId);
+      for (const item of lanches) {
+        const lanche = lanchesDb.find((l) => l.id === item.lancheComboId);
         if (lanche) {
           valorTotal += lanche.preco * item.quantidade;
         }
       }
     }
 
-    // Criar pedido com valorTotal calculado automaticamente
+    // Criar pedido com ingressos e lanches em uma transação
     const pedido = await this.prisma.pedido.create({
       data: {
         usuarioId,
         valorTotal,
         ingressos: {
-          connect: ingressoIds.map((id) => ({ id })),
+          create: ingressosData,
         },
         lanches: {
-          create: lancheItems.map((item) => ({
+          create: lanches.map((item) => ({
             lancheComboId: item.lancheComboId,
             quantidade: item.quantidade,
           })),
